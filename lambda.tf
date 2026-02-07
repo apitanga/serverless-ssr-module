@@ -52,6 +52,14 @@ data "archive_file" "bootstrap" {
     content  = local.bootstrap_code
     filename = "index.js"
   }
+
+  # Add package.json to specify CommonJS for Node.js 22 compatibility
+  source {
+    content  = jsonencode({
+      type = "commonjs"
+    })
+    filename = "package.json"
+  }
 }
 
 # Upload bootstrap code to S3 (Primary)
