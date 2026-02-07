@@ -16,7 +16,7 @@ resource "aws_route53_health_check" "primary" {
   count    = var.environment == "prod" ? 1 : 0
   provider = aws.primary
 
-  fqdn              = replace(aws_lambda_function_url.primary.function_url, "https://", "")
+  fqdn              = trimsuffix(replace(aws_lambda_function_url.primary.function_url, "https://", ""), "/")
   port              = 443
   type              = "HTTPS"
   resource_path     = "/api/health"
@@ -35,7 +35,7 @@ resource "aws_route53_health_check" "dr" {
   count    = var.environment == "prod" && var.enable_dr ? 1 : 0
   provider = aws.primary
 
-  fqdn              = replace(aws_lambda_function_url.dr[0].function_url, "https://", "")
+  fqdn              = trimsuffix(replace(aws_lambda_function_url.dr[0].function_url, "https://", ""), "/")
   port              = 443
   type              = "HTTPS"
   resource_path     = "/api/health"
