@@ -27,6 +27,18 @@ terraform apply
 
 **[📖 Full Getting Started Guide](docs/GETTING_STARTED.md)**
 
+---
+
+## ⚠️ Important Prerequisite
+
+**Your domain must be managed by AWS Route 53** before deploying this module.
+
+If your domain is currently with another registrar (GoDaddy, Namecheap, Squarespace, etc.), you'll need to migrate it to Route 53 first. This typically takes 10-30 minutes.
+
+**[📘 Domain Setup Guide](docs/DOMAIN_SETUP.md)** - Complete migration instructions
+
+---
+
 ## Features
 
 - 🚀 **Serverless** - Lambda-based SSR, no servers to manage
@@ -52,8 +64,10 @@ Primary Region (us-east-1)     DR Region (us-west-2)
 ## Documentation
 
 - **[Getting Started](docs/GETTING_STARTED.md)** - Step-by-step deployment guide
+- **[Domain Setup](docs/DOMAIN_SETUP.md)** - Migrate your domain to Route 53
 - **[API Reference](docs/API.md)** - All inputs and outputs
 - **[Architecture](docs/ARCHITECTURE.md)** - How it works, costs, performance
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 
 ## Examples
 
@@ -64,7 +78,7 @@ Primary Region (us-east-1)     DR Region (us-west-2)
 
 - Terraform >= 1.5.0
 - AWS provider ~> 5.0
-- Domain in Route 53 (same AWS account)
+- **Domain in Route 53** (same AWS account) - [Setup Guide](docs/DOMAIN_SETUP.md)
 
 ## Related Projects
 
