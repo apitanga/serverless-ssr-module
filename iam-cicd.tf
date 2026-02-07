@@ -54,7 +54,7 @@ resource "aws_iam_policy" "cicd" {
           "${aws_s3_bucket.lambda_deployments_primary.arn}/*",
           aws_s3_bucket.static_assets.arn,
           "${aws_s3_bucket.static_assets.arn}/*"
-        ], var.enable_dr ? [
+          ], var.enable_dr ? [
           aws_s3_bucket.lambda_deployments_dr[0].arn,
           "${aws_s3_bucket.lambda_deployments_dr[0].arn}/*",
           aws_s3_bucket.static_assets_dr[0].arn,
@@ -116,9 +116,9 @@ resource "aws_iam_policy" "cicd" {
 
 # Attach policy to user
 resource "aws_iam_user_policy_attachment" "cicd" {
-  count    = var.create_ci_cd_user ? 1 : 0
-  provider = aws.primary
-  user     = aws_iam_user.cicd[0].name
+  count      = var.create_ci_cd_user ? 1 : 0
+  provider   = aws.primary
+  user       = aws_iam_user.cicd[0].name
   policy_arn = aws_iam_policy.cicd[0].arn
 }
 

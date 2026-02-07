@@ -136,8 +136,8 @@ resource "aws_acm_certificate_validation" "main" {
 # ACM Certificate for Custom Domain (DNS validation via external provider like Squarespace)
 # Note: This certificate requires manual DNS validation - see outputs for validation records
 resource "aws_acm_certificate" "custom_domain" {
-  provider          = aws.primary  # Must be us-east-1 for CloudFront
-  count             = var.custom_domain != "" ? 1 : 0
+  provider = aws.primary # Must be us-east-1 for CloudFront
+  count    = var.custom_domain != "" ? 1 : 0
 
   domain_name       = var.custom_domain
   validation_method = "DNS"

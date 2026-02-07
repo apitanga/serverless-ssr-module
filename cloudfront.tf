@@ -7,8 +7,8 @@ resource "aws_cloudfront_distribution" "main" {
 
   # Aliases for custom domain - support both prod domain AND custom domain
   aliases = compact([
-    var.environment == "prod" ? local.domains.primary : "",  # Route53 domain (prod only)
-    var.custom_domain != "" ? var.custom_domain : ""         # External custom domain (if set)
+    var.environment == "prod" ? local.domains.primary : "", # Route53 domain (prod only)
+    var.custom_domain != "" ? var.custom_domain : ""        # External custom domain (if set)
   ])
 
   # Origin Group for failover

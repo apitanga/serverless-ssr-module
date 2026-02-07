@@ -1,6 +1,8 @@
 # Lambda Module - Reusable Lambda function with Function URL
 
 terraform {
+  required_version = ">= 1.5.0"
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -31,7 +33,7 @@ resource "aws_lambda_function" "this" {
 
   # VPC configuration (optional)
   dynamic "vpc_config" {
-    for_each = var.vpc_subnet_ids != [] ? [1] : []
+    for_each = length(var.vpc_subnet_ids) > 0 ? [1] : []
     content {
       subnet_ids         = var.vpc_subnet_ids
       security_group_ids = var.vpc_security_group_ids

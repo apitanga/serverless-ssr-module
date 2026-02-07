@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        example: [".", "examples/basic", "examples/complete"]
+        example: ["examples/basic", "examples/complete"]
     steps:
       - name: Checkout
         uses: actions/checkout@v4

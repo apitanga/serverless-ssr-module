@@ -41,3 +41,9 @@ output "next_steps" {
     
   EOT
 }
+
+output "cicd_secret_access_key" {
+  description = "CI/CD AWS secret access key"
+  value       = module.ssr.cicd_aws_secret_access_key
+  sensitive   = true
+}

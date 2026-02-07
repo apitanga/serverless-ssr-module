@@ -47,9 +47,6 @@ locals {
   domains = {
     primary = "${var.subdomain}.${var.domain_name}"
   }
-
-  # Account ID for unique naming
-  account_id = data.aws_caller_identity.current.account_id
 }
 
 # Data Sources
@@ -57,12 +54,4 @@ locals {
 
 data "aws_caller_identity" "current" {
   provider = aws.primary
-}
-
-data "aws_region" "primary" {
-  provider = aws.primary
-}
-
-data "aws_region" "dr" {
-  provider = aws.dr
 }

@@ -119,8 +119,8 @@ output "app_config" {
       s3_bucket = aws_s3_bucket.static_assets.id
     }
     cloudfront = {
-      distribution_id   = aws_cloudfront_distribution.main.id
-      domain_name       = aws_cloudfront_distribution.main.domain_name
+      distribution_id = aws_cloudfront_distribution.main.id
+      domain_name     = aws_cloudfront_distribution.main.domain_name
     }
     dynamodb = {
       table_name = aws_dynamodb_table.visits_primary.name

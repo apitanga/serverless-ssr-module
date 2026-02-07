@@ -21,7 +21,7 @@ provider "aws" {
 }
 
 module "ssr" {
-  source = "../.."  # References the module root
+  source = "../.." # References the module root
 
   providers = {
     aws.primary = aws.primary
