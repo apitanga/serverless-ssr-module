@@ -4,6 +4,10 @@ Deploy serverless SSR applications (Nuxt.js, Next.js, Nitro) on AWS with automat
 
 ## Quick Start
 
+### Option 1: No Custom Domain (Simplest)
+
+Start without a domain - uses CloudFront URL:
+
 ```hcl
 module "ssr" {
   source = "github.com/apitanga/serverless-ssr-module"
@@ -14,28 +18,56 @@ module "ssr" {
   }
 
   project_name = "my-app"
-  domain_name  = "example.com"
-  subdomain    = "app"
 }
 ```
 
-Deploy:
-```bash
-terraform init
-terraform apply
+**Output:** `https://d111111abcdef8.cloudfront.net`
+
+### Option 2: Domain in Route 53 (Fully Automated)
+
+Use your own domain with automatic DNS and SSL:
+
+```hcl
+module "ssr" {
+  source = "github.com/apitanga/serverless-ssr-module"
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  project_name      = "my-app"
+  domain_name       = "example.com"
+  subdomain         = "app"
+  route53_managed   = true  # Domain is in Route 53
+}
 ```
 
+**Output:** `https://app.example.com` (automatic DNS + SSL)
+
+### Option 3: Domain NOT in Route 53 (Manual DNS)
+
+Use external domain (GoDaddy, Namecheap, etc.):
+
+```hcl
+module "ssr" {
+  source = "github.com/apitanga/serverless-ssr-module"
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  project_name      = "my-app"
+  domain_name       = "example.com"
+  subdomain         = "app"
+  route53_managed   = false  # Add DNS records manually
+}
+```
+
+Terraform will output DNS records to add to your domain registrar.
+
 **[📖 Full Getting Started Guide](docs/GETTING_STARTED.md)**
-
----
-
-## ⚠️ Important Prerequisite
-
-**Your domain must be managed by AWS Route 53** before deploying this module.
-
-If your domain is currently with another registrar (GoDaddy, Namecheap, Squarespace, etc.), you'll need to migrate it to Route 53 first. This typically takes 10-30 minutes.
-
-**[📘 Domain Setup Guide](docs/DOMAIN_SETUP.md)** - Complete migration instructions
 
 ---
 
@@ -78,7 +110,7 @@ Primary Region (us-east-1)     DR Region (us-west-2)
 
 - Terraform >= 1.5.0
 - AWS provider ~> 5.0
-- **Domain in Route 53** (same AWS account) - [Setup Guide](docs/DOMAIN_SETUP.md)
+- Domain in Route 53 (optional, for custom domain with automatic DNS) - [Setup Guide](docs/DOMAIN_SETUP.md)
 
 ## Related Projects
 

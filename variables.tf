@@ -13,14 +13,33 @@ variable "project_name" {
   }
 }
 
+# Optional Domain Configuration
+# ------------------------------------------------------------------------------
+# Leave domain_name as null to use CloudFront domain only (no Route53 required)
+# Set domain_name to enable custom domain with ACM certificate
+# Set route53_managed = true if domain is hosted in Route53 for automatic DNS management
+
 variable "domain_name" {
-  description = "Base domain name (e.g., example.com)"
+  description = "Base domain name (e.g., example.com). Leave null to use CloudFront domain only."
   type        = string
+  default     = null
+
+  validation {
+    condition     = var.domain_name == null || can(regex("^[a-z0-9][a-z0-9-.]*\\.[a-z]{2,}$", var.domain_name))
+    error_message = "Domain name must be a valid domain (e.g., example.com) or null."
+  }
 }
 
 variable "subdomain" {
-  description = "Subdomain for the application (e.g., app, www)"
+  description = "Subdomain for the application (e.g., app, www). Only used if domain_name is set."
   type        = string
+  default     = "app"
+}
+
+variable "route53_managed" {
+  description = "Whether domain is hosted in Route53 (enables automatic DNS management and validation). Only applies if domain_name is set."
+  type        = bool
+  default     = false
 }
 
 # Optional Variables
@@ -48,12 +67,6 @@ variable "enable_dr" {
   description = "Enable DR region deployment"
   type        = bool
   default     = true
-}
-
-variable "custom_domain" {
-  description = "Custom domain for CloudFront (e.g., app.example.com). Leave empty to use CloudFront domain only."
-  type        = string
-  default     = ""
 }
 
 variable "lambda_memory_size" {

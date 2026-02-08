@@ -60,7 +60,17 @@ output "cloudfront_domain_name" {
 
 output "application_url" {
   description = "Application URL"
-  value       = "https://${var.subdomain}.${var.domain_name}"
+  value       = local.enable_custom_domain ? "https://${local.full_domain}" : "https://${aws_cloudfront_distribution.main.domain_name}"
+}
+
+output "custom_domain_enabled" {
+  description = "Whether custom domain is configured"
+  value       = local.enable_custom_domain
+}
+
+output "route53_managed" {
+  description = "Whether domain is managed by Route53"
+  value       = local.enable_route53
 }
 
 # DynamoDB
@@ -128,13 +138,14 @@ output "app_config" {
   }
 }
 
-# Custom Domain (if enabled)
+# DNS Records for Manual Configuration
 # ------------------------------------------------------------------------------
+# If domain is NOT managed by Route53, these records must be added manually
 
-output "custom_domain_validation_records" {
-  description = "DNS records for ACM certificate validation"
-  value = var.custom_domain != "" ? {
-    for dvo in aws_acm_certificate.custom_domain[0].domain_validation_options : dvo.domain_name => {
+output "dns_validation_records" {
+  description = "DNS records for ACM certificate validation (add these to your DNS provider if route53_managed = false)"
+  value = local.enable_custom_domain && !local.enable_route53 ? {
+    for dvo in aws_acm_certificate.main[0].domain_validation_options : dvo.domain_name => {
       name  = dvo.resource_record_name
       type  = dvo.resource_record_type
       value = dvo.resource_record_value
@@ -142,11 +153,12 @@ output "custom_domain_validation_records" {
   } : {}
 }
 
-output "custom_domain_cname" {
-  description = "CNAME record to point custom domain to CloudFront"
-  value = var.custom_domain != "" ? {
-    name  = var.custom_domain
-    type  = "CNAME"
+output "dns_cloudfront_record" {
+  description = "DNS record to point domain to CloudFront (add this to your DNS provider if route53_managed = false)"
+  value = local.enable_custom_domain && !local.enable_route53 ? {
+    name  = local.full_domain
+    type  = "A (Alias) or CNAME"
     value = aws_cloudfront_distribution.main.domain_name
+    note  = "Use A record (alias) if supported, otherwise CNAME"
   } : null
 }

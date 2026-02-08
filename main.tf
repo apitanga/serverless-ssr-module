@@ -43,9 +43,14 @@ locals {
   # Normalize project name for resource naming
   app_name = var.project_name
 
-  # Domain configuration
+  # Custom domain configuration
+  enable_custom_domain = var.domain_name != null
+  enable_route53       = local.enable_custom_domain && var.route53_managed
+  full_domain          = local.enable_custom_domain ? "${var.subdomain}.${var.domain_name}" : null
+
+  # Legacy domain reference (for backward compatibility)
   domains = {
-    primary = "${var.subdomain}.${var.domain_name}"
+    primary = local.full_domain
   }
 }
 

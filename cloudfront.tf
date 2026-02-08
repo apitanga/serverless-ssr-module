@@ -5,11 +5,8 @@ resource "aws_cloudfront_distribution" "main" {
   enabled  = true
   comment  = "${local.app_name} - Multi-region SSR"
 
-  # Aliases for custom domain - support both prod domain AND custom domain
-  aliases = compact([
-    var.environment == "prod" ? local.domains.primary : "", # Route53 domain (prod only)
-    var.custom_domain != "" ? var.custom_domain : ""        # External custom domain (if set)
-  ])
+  # Aliases for custom domain (only if domain_name is set)
+  aliases = local.enable_custom_domain ? [local.full_domain] : []
 
   # Origin Group for Lambda failover
   origin_group {
@@ -178,14 +175,12 @@ resource "aws_cloudfront_distribution" "main" {
   }
 
   # SSL Certificate
-  # Priority: custom_domain cert > prod cert > CloudFront default
+  # Use ACM certificate if custom domain is configured, otherwise use CloudFront default
   viewer_certificate {
-    cloudfront_default_certificate = var.custom_domain == "" && var.environment != "prod"
-    acm_certificate_arn = var.custom_domain != "" ? aws_acm_certificate.custom_domain[0].arn : (
-      var.environment == "prod" ? aws_acm_certificate.main[0].arn : null
-    )
-    ssl_support_method       = var.custom_domain != "" || var.environment == "prod" ? "sni-only" : null
-    minimum_protocol_version = var.custom_domain != "" || var.environment == "prod" ? "TLSv1.2_2021" : null
+    cloudfront_default_certificate = !local.enable_custom_domain
+    acm_certificate_arn            = local.enable_custom_domain ? aws_acm_certificate.main[0].arn : null
+    ssl_support_method             = local.enable_custom_domain ? "sni-only" : null
+    minimum_protocol_version       = local.enable_custom_domain ? "TLSv1.2_2021" : null
   }
 
   # Geo restrictions (none for PoC)
