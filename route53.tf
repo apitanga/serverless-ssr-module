@@ -1,9 +1,10 @@
-# Route53 DNS and Health Checks
+# Route53 DNS Configuration
+# Simple CNAME/Alias to CloudFront - failover handled by CloudFront Origin Groups
+#
 # Note: For dev environment, you can skip Route53 and use CloudFront domain directly
 # For prod, ensure the Route53 zone exists or create one
 
 # Route53 Zone (data source - only if zone exists)
-# Uncomment this when you have a Route53 zone for your domain
 data "aws_route53_zone" "main" {
   count        = var.environment == "prod" ? 1 : 0
   provider     = aws.primary
@@ -11,86 +12,20 @@ data "aws_route53_zone" "main" {
   private_zone = false
 }
 
-# Health Check for Primary Region (only in prod)
-resource "aws_route53_health_check" "primary" {
-  count    = var.environment == "prod" ? 1 : 0
-  provider = aws.primary
-
-  fqdn              = trimsuffix(replace(aws_lambda_function_url.primary.function_url, "https://", ""), "/")
-  port              = 443
-  type              = "HTTPS"
-  resource_path     = "/api/health"
-  failure_threshold = 3
-  request_interval  = 30
-
-  regions = ["us-east-1", "us-west-2", "eu-west-1"]
-
-  tags = merge(local.common_tags, {
-    Name = "${local.app_name}-primary-health"
-  })
-}
-
-# Health Check for DR Region (only in prod, only if DR enabled)
-resource "aws_route53_health_check" "dr" {
-  count    = var.environment == "prod" && var.enable_dr ? 1 : 0
-  provider = aws.primary
-
-  fqdn              = trimsuffix(replace(aws_lambda_function_url.dr[0].function_url, "https://", ""), "/")
-  port              = 443
-  type              = "HTTPS"
-  resource_path     = "/api/health"
-  failure_threshold = 3
-  request_interval  = 30
-
-  regions = ["us-east-1", "us-west-2", "eu-west-1"]
-
-  tags = merge(local.common_tags, {
-    Name = "${local.app_name}-dr-health"
-  })
-}
-
-# DNS Record for Primary (Failover) - only if zone exists
-resource "aws_route53_record" "primary" {
+# Simple DNS Record pointing to CloudFront
+# CloudFront Origin Groups handle all failover logic (Primary Lambda → DR Lambda)
+resource "aws_route53_record" "main" {
   count    = var.environment == "prod" ? 1 : 0
   provider = aws.primary
   zone_id  = data.aws_route53_zone.main[0].zone_id
   name     = local.domains.primary
   type     = "A"
 
-  failover_routing_policy {
-    type = "PRIMARY"
-  }
-
   alias {
     name                   = aws_cloudfront_distribution.main.domain_name
     zone_id                = aws_cloudfront_distribution.main.hosted_zone_id
-    evaluate_target_health = true
+    evaluate_target_health = false # CloudFront handles origin health
   }
-
-  health_check_id = aws_route53_health_check.primary[0].id
-  set_identifier  = "primary"
-}
-
-# DNS Record for DR (Failover) - only if zone exists
-resource "aws_route53_record" "dr" {
-  count    = var.environment == "prod" ? 1 : 0
-  provider = aws.primary
-  zone_id  = data.aws_route53_zone.main[0].zone_id
-  name     = local.domains.primary
-  type     = "A"
-
-  failover_routing_policy {
-    type = "SECONDARY"
-  }
-
-  alias {
-    name                   = aws_cloudfront_distribution.main.domain_name
-    zone_id                = aws_cloudfront_distribution.main.hosted_zone_id
-    evaluate_target_health = true
-  }
-
-  health_check_id = aws_route53_health_check.dr[0].id
-  set_identifier  = "dr"
 }
 
 # ACM Certificate for CloudFront (must be in us-east-1)
