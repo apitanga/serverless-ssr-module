@@ -11,7 +11,7 @@ resource "aws_cloudfront_distribution" "main" {
     var.custom_domain != "" ? var.custom_domain : ""        # External custom domain (if set)
   ])
 
-  # Origin Group for failover
+  # Origin Group for Lambda failover
   origin_group {
     origin_id = "origin-group-primary-dr"
 
@@ -25,6 +25,23 @@ resource "aws_cloudfront_distribution" "main" {
 
     member {
       origin_id = "dr-lambda"
+    }
+  }
+
+  # Origin Group for S3 Static Assets failover
+  origin_group {
+    origin_id = "origin-group-static-assets"
+
+    failover_criteria {
+      status_codes = [500, 502, 503, 504]
+    }
+
+    member {
+      origin_id = "static-assets-primary"
+    }
+
+    member {
+      origin_id = "static-assets-dr"
     }
   }
 
@@ -64,13 +81,33 @@ resource "aws_cloudfront_distribution" "main" {
     }
   }
 
-  # Static Assets Origin (S3)
+  # Static Assets Origin - Primary (S3)
   origin {
     domain_name = aws_s3_bucket.static_assets.bucket_regional_domain_name
-    origin_id   = "static-assets"
+    origin_id   = "static-assets-primary"
 
     s3_origin_config {
       origin_access_identity = aws_cloudfront_origin_access_identity.main.cloudfront_access_identity_path
+    }
+
+    custom_header {
+      name  = "X-Origin-Region"
+      value = var.primary_region
+    }
+  }
+
+  # Static Assets Origin - DR (S3)
+  origin {
+    domain_name = var.enable_dr ? aws_s3_bucket.static_assets_dr[0].bucket_regional_domain_name : ""
+    origin_id   = "static-assets-dr"
+
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.main.cloudfront_access_identity_path
+    }
+
+    custom_header {
+      name  = "X-Origin-Region"
+      value = var.dr_region
     }
   }
 
@@ -101,7 +138,7 @@ resource "aws_cloudfront_distribution" "main" {
     path_pattern     = "/_nuxt/*"
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "static-assets"
+    target_origin_id = "origin-group-static-assets"
 
     forwarded_values {
       query_string = false
@@ -123,7 +160,7 @@ resource "aws_cloudfront_distribution" "main" {
     path_pattern     = "/favicon.ico"
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "static-assets"
+    target_origin_id = "origin-group-static-assets"
 
     forwarded_values {
       query_string = false
