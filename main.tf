@@ -47,11 +47,6 @@ locals {
   enable_custom_domain = var.domain_name != null
   enable_route53       = local.enable_custom_domain && var.route53_managed
   full_domain          = local.enable_custom_domain ? "${var.subdomain}.${var.domain_name}" : null
-
-  # Legacy domain reference (for backward compatibility)
-  domains = {
-    primary = local.full_domain
-  }
 }
 
 # Data Sources

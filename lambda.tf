@@ -55,7 +55,7 @@ data "archive_file" "bootstrap" {
 
   # Add package.json to specify CommonJS for Node.js 22 compatibility
   source {
-    content  = jsonencode({
+    content = jsonencode({
       type = "commonjs"
     })
     filename = "package.json"
