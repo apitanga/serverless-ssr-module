@@ -46,7 +46,9 @@ locals {
   # Custom domain configuration
   enable_custom_domain = var.domain_name != null
   enable_route53       = local.enable_custom_domain && var.route53_managed
-  full_domain          = local.enable_custom_domain ? "${var.subdomain}.${var.domain_name}" : null
+  full_domain          = local.enable_custom_domain ? (
+    var.subdomain != null && var.subdomain != "" ? "${var.subdomain}.${var.domain_name}" : var.domain_name
+  ) : null
 }
 
 # Data Sources

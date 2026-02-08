@@ -45,6 +45,28 @@ module "ssr" {
 
 **Output:** `https://app.example.com` (automatic DNS + SSL)
 
+### Option 2b: Root Domain (No Subdomain)
+
+Deploy to root domain (e.g., `https://example.com`):
+
+```hcl
+module "ssr" {
+  source = "github.com/apitanga/serverless-ssr-module"
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  project_name      = "my-app"
+  domain_name       = "example.com"
+  # subdomain omitted or set to null
+  route53_managed   = true
+}
+```
+
+**Output:** `https://example.com`
+
 ### Option 3: Domain NOT in Route 53 (Manual DNS)
 
 Use external domain (GoDaddy, Namecheap, etc.):

@@ -31,9 +31,9 @@ variable "domain_name" {
 }
 
 variable "subdomain" {
-  description = "Subdomain for the application (e.g., app, www). Only used if domain_name is set."
+  description = "Subdomain for the application (e.g., app, www). Leave null or empty for root domain."
   type        = string
-  default     = "app"
+  default     = null
 }
 
 variable "route53_managed" {
