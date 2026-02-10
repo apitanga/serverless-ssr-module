@@ -44,8 +44,9 @@ resource "aws_cloudfront_distribution" "main" {
 
   # Primary Origin (us-east-1 Lambda Function URL)
   origin {
-    domain_name = regex("https://([^/]+)/?", aws_lambda_function_url.primary.function_url)[0]
-    origin_id   = "primary-lambda"
+    domain_name              = regex("https://([^/]+)/?", aws_lambda_function_url.primary.function_url)[0]
+    origin_id                = "primary-lambda"
+    origin_access_control_id = aws_cloudfront_origin_access_control.lambda.id
 
     custom_origin_config {
       http_port              = 443
@@ -62,8 +63,9 @@ resource "aws_cloudfront_distribution" "main" {
 
   # DR Origin (us-west-2 Lambda Function URL)
   origin {
-    domain_name = var.enable_dr ? regex("https://([^/]+)/?", aws_lambda_function_url.dr[0].function_url)[0] : ""
-    origin_id   = "dr-lambda"
+    domain_name              = var.enable_dr ? regex("https://([^/]+)/?", aws_lambda_function_url.dr[0].function_url)[0] : ""
+    origin_id                = "dr-lambda"
+    origin_access_control_id = aws_cloudfront_origin_access_control.lambda.id
 
     custom_origin_config {
       http_port              = 443
@@ -204,4 +206,17 @@ resource "aws_cloudfront_distribution" "main" {
 resource "aws_cloudfront_origin_access_identity" "main" {
   provider = aws.primary
   comment  = "OAI for ${local.app_name} static assets"
+}
+
+# Origin Access Control for Lambda Function URLs
+# Signs CloudFront → Lambda requests with SigV4 so Lambda can require AWS_IAM auth.
+# Direct access to Lambda Function URLs returns 403 Forbidden.
+resource "aws_cloudfront_origin_access_control" "lambda" {
+  provider = aws.primary
+
+  name                              = "${local.app_name}-lambda-oac"
+  description                       = "OAC for ${local.app_name} Lambda Function URLs"
+  origin_access_control_origin_type = "lambda"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
 }

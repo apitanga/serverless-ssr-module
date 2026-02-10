@@ -277,20 +277,14 @@ resource "aws_iam_role_policy_attachment" "lambda_s3" {
 
 # Lambda Function URLs
 # ------------------------------------------------------------------------------
+# authorization_type = "AWS_IAM" requires requests to be SigV4-signed.
+# CloudFront OAC handles signing; direct URL access returns 403.
 
 resource "aws_lambda_function_url" "primary" {
   provider = aws.primary
 
   function_name      = aws_lambda_function.primary.function_name
-  authorization_type = "NONE"
-
-  cors {
-    allow_credentials = true
-    allow_origins     = ["*"]
-    allow_methods     = ["*"]
-    allow_headers     = ["*"]
-    max_age           = 86400
-  }
+  authorization_type = "AWS_IAM"
 }
 
 resource "aws_lambda_function_url" "dr" {
@@ -298,35 +292,42 @@ resource "aws_lambda_function_url" "dr" {
   provider = aws.dr
 
   function_name      = aws_lambda_function.dr[0].function_name
-  authorization_type = "NONE"
+  authorization_type = "AWS_IAM"
+}
 
-  cors {
-    allow_credentials = true
-    allow_origins     = ["*"]
-    allow_methods     = ["*"]
-    allow_headers     = ["*"]
-    max_age           = 86400
+# Lambda Permissions for CloudFront OAC
+# ------------------------------------------------------------------------------
+# Allow CloudFront to invoke Function URLs via OAC (SigV4-signed requests).
+# Source account condition avoids circular dependency with the distribution ARN
+# while still ensuring only CloudFront distributions in this account can invoke.
+
+resource "aws_lambda_permission" "allow_cloudfront_primary" {
+  provider = aws.primary
+
+  statement_id  = "AllowCloudFrontOAC"
+  action        = "lambda:InvokeFunctionUrl"
+  function_name = aws_lambda_function.primary.function_name
+  principal     = "cloudfront.amazonaws.com"
+
+  condition {
+    test     = "StringEquals"
+    variable = "aws:SourceAccount"
+    values   = [data.aws_caller_identity.current.account_id]
   }
 }
 
-# Lambda Permissions for Function URL Access
-# ------------------------------------------------------------------------------
-
-resource "aws_lambda_permission" "allow_function_url_primary" {
-  provider = aws.primary
-
-  statement_id  = "AllowFunctionURLInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.primary.function_name
-  principal     = "*"
-}
-
-resource "aws_lambda_permission" "allow_function_url_dr" {
+resource "aws_lambda_permission" "allow_cloudfront_dr" {
   count    = var.enable_dr ? 1 : 0
   provider = aws.dr
 
-  statement_id  = "AllowFunctionURLInvoke"
-  action        = "lambda:InvokeFunction"
+  statement_id  = "AllowCloudFrontOAC"
+  action        = "lambda:InvokeFunctionUrl"
   function_name = aws_lambda_function.dr[0].function_name
-  principal     = "*"
+  principal     = "cloudfront.amazonaws.com"
+
+  condition {
+    test     = "StringEquals"
+    variable = "aws:SourceAccount"
+    values   = [data.aws_caller_identity.current.account_id]
+  }
 }
