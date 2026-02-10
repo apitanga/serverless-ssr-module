@@ -304,30 +304,20 @@ resource "aws_lambda_function_url" "dr" {
 resource "aws_lambda_permission" "allow_cloudfront_primary" {
   provider = aws.primary
 
-  statement_id  = "AllowCloudFrontOAC"
-  action        = "lambda:InvokeFunctionUrl"
-  function_name = aws_lambda_function.primary.function_name
-  principal     = "cloudfront.amazonaws.com"
-
-  condition {
-    test     = "StringEquals"
-    variable = "aws:SourceAccount"
-    values   = [data.aws_caller_identity.current.account_id]
-  }
+  statement_id   = "AllowCloudFrontOAC"
+  action         = "lambda:InvokeFunctionUrl"
+  function_name  = aws_lambda_function.primary.function_name
+  principal      = "cloudfront.amazonaws.com"
+  source_account = data.aws_caller_identity.current.account_id
 }
 
 resource "aws_lambda_permission" "allow_cloudfront_dr" {
   count    = var.enable_dr ? 1 : 0
   provider = aws.dr
 
-  statement_id  = "AllowCloudFrontOAC"
-  action        = "lambda:InvokeFunctionUrl"
-  function_name = aws_lambda_function.dr[0].function_name
-  principal     = "cloudfront.amazonaws.com"
-
-  condition {
-    test     = "StringEquals"
-    variable = "aws:SourceAccount"
-    values   = [data.aws_caller_identity.current.account_id]
-  }
+  statement_id   = "AllowCloudFrontOAC"
+  action         = "lambda:InvokeFunctionUrl"
+  function_name  = aws_lambda_function.dr[0].function_name
+  principal      = "cloudfront.amazonaws.com"
+  source_account = data.aws_caller_identity.current.account_id
 }
