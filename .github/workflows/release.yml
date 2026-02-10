@@ -84,7 +84,8 @@ jobs:
         run: |
           # Modules with configuration_aliases require provider stubs for terraform validate.
           # These mocks are safe — terraform validate does not authenticate to AWS.
-          cat > provider_override.tf << 'EOF'
+          # Note: must NOT use _override.tf suffix (Terraform treats those as override files).
+          cat > ci_providers.tf << 'EOF'
           provider "aws" {
             alias                       = "primary"
             region                      = "us-east-1"
@@ -106,7 +107,7 @@ jobs:
           EOF
           terraform init -backend=false
           terraform validate
-          rm provider_override.tf
+          rm ci_providers.tf
 
       - name: Validate Examples
         run: |
