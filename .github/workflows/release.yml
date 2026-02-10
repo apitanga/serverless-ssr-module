@@ -82,8 +82,31 @@ jobs:
 
       - name: Validate Module
         run: |
+          # Modules with configuration_aliases require provider stubs for terraform validate.
+          # These mocks are safe — terraform validate does not authenticate to AWS.
+          cat > provider_override.tf << 'EOF'
+          provider "aws" {
+            alias                       = "primary"
+            region                      = "us-east-1"
+            skip_credentials_validation = true
+            skip_requesting_account_id  = true
+            skip_metadata_api_check     = true
+            access_key                  = "mock"
+            secret_key                  = "mock"
+          }
+          provider "aws" {
+            alias                       = "dr"
+            region                      = "us-west-2"
+            skip_credentials_validation = true
+            skip_requesting_account_id  = true
+            skip_metadata_api_check     = true
+            access_key                  = "mock"
+            secret_key                  = "mock"
+          }
+          EOF
           terraform init -backend=false
           terraform validate
+          rm provider_override.tf
 
       - name: Validate Examples
         run: |
