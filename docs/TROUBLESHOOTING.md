@@ -184,6 +184,62 @@ aws lambda get-function-configuration \
 
 ---
 
+### Site shows 403 Forbidden after upgrading to v2.2.0+
+
+**Symptom:** CloudFront returns 403 with message:
+```
+{"Message":"Forbidden. For troubleshooting Function URL authorization issues, see: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html"}
+```
+
+**When:** After upgrading to serverless-ssr-module v2.2.0 or later, which introduced CloudFront Origin Access Control (OAC) for Lambda Function URLs.
+
+**Root cause:** Missing `lambda:InvokeFunction` permission in Lambda resource policy alongside existing `lambda:InvokeFunctionUrl` permission.
+
+**Why this happens:** CloudFront OAC with Lambda Function URLs requires **two permissions**:
+1. `lambda:InvokeFunctionUrl` - For Function URL authorization (already present)
+2. `lambda:InvokeFunction` - For OAC signing (missing in v2.2.0)
+
+**Diagnosis:**
+```bash
+# Check Lambda resource policy
+aws lambda get-policy --function-name <function-name> --region <region>
+
+# Look for both permissions in the policy
+# Should contain both "lambda:InvokeFunctionUrl" AND "lambda:InvokeFunction"
+```
+
+**Solution:** Add the missing permission to all Lambda functions (primary and DR in all regions):
+```bash
+# For each Lambda function (primary and DR):
+aws lambda add-permission \
+  --function-name <function-name> \
+  --statement-id AllowCloudFrontOAC-InvokeFunction \
+  --action lambda:InvokeFunction \
+  --principal cloudfront.amazonaws.com \
+  --source-arn arn:aws:cloudfront::<account-id>:distribution/<distribution-id> \
+  --region <region>
+
+# Example for pomo-dev-primary:
+aws lambda add-permission \
+  --function-name pomo-dev-primary \
+  --statement-id AllowCloudFrontOAC-InvokeFunction \
+  --action lambda:InvokeFunction \
+  --principal cloudfront.amazonaws.com \
+  --source-arn arn:aws:cloudfront::137064409667:distribution/E2KAVFP7BN5349 \
+  --region us-east-1
+```
+
+**Module fix:** The module has been updated in v2.2.2+ to include both permissions automatically. If using v2.2.0 or v2.2.1, apply the fix above or upgrade.
+
+**Verification:**
+1. Both permissions should appear in Lambda resource policy
+2. CloudFront distribution should return 200 OK
+3. Lambda logs should show successful invocations
+
+**Note:** This applies to **all Lambda functions** in the origin group (primary + DR regions). Both need the permission added.
+
+---
+
 ### Site shows old/cached content after deployment
 
 **Symptom:** Code deployed but site shows old version
@@ -471,4 +527,4 @@ Avoid common issues by checking these before deploying:
 
 ---
 
-**Last updated:** 2026-02-07
+**Last updated:** 2026-02-10
