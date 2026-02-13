@@ -1,4 +1,4 @@
-# serverless-ssr-module
+# terraform-aws-serverless-ssr
 
 Terraform module for deploying SSR applications (Nuxt, Next.js, Nitro) on AWS Lambda with multi-region failover.
 
@@ -31,7 +31,7 @@ Optional: ACM certificate + Route 53 alias record for a custom domain.
 
 ```hcl
 module "ssr" {
-  source = "github.com/pomo-studio/serverless-ssr-module?ref=v2.2.3"
+  source = "github.com/pomo-studio/terraform-aws-serverless-ssr?ref=v2.2.4"
 
   providers = {
     aws.primary = aws.primary
@@ -50,7 +50,7 @@ Output: `https://d111111abcdef8.cloudfront.net`
 
 ```hcl
 module "ssr" {
-  source = "github.com/pomo-studio/serverless-ssr-module?ref=v2.2.3"
+  source = "github.com/pomo-studio/terraform-aws-serverless-ssr?ref=v2.2.4"
 
   providers = {
     aws.primary = aws.primary
@@ -72,7 +72,7 @@ Output: `https://app.example.com` — DNS and ACM certificate created automatica
 
 ```hcl
 module "ssr" {
-  source = "github.com/pomo-studio/serverless-ssr-module?ref=v2.2.3"
+  source = "github.com/pomo-studio/terraform-aws-serverless-ssr?ref=v2.2.4"
 
   providers = {
     aws.primary = aws.primary

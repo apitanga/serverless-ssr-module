@@ -330,22 +330,22 @@ resource "aws_lambda_permission" "allow_cloudfront_dr" {
 resource "aws_lambda_permission" "allow_cloudfront_primary_dist" {
   provider = aws.primary
 
-  statement_id   = "${var.project_name}-AllowCloudFrontOACDist"
-  action         = "lambda:InvokeFunctionUrl"
-  function_name  = aws_lambda_function.primary.function_name
-  principal      = "cloudfront.amazonaws.com"
-  source_arn     = aws_cloudfront_distribution.main.arn
+  statement_id  = "${var.project_name}-AllowCloudFrontOACDist"
+  action        = "lambda:InvokeFunctionUrl"
+  function_name = aws_lambda_function.primary.function_name
+  principal     = "cloudfront.amazonaws.com"
+  source_arn    = aws_cloudfront_distribution.main.arn
 }
 
 resource "aws_lambda_permission" "allow_cloudfront_dr_dist" {
   count    = var.enable_dr ? 1 : 0
   provider = aws.dr
 
-  statement_id   = "${var.project_name}-AllowCloudFrontOACDist"
-  action         = "lambda:InvokeFunctionUrl"
-  function_name  = aws_lambda_function.dr[0].function_name
-  principal      = "cloudfront.amazonaws.com"
-  source_arn     = aws_cloudfront_distribution.main.arn
+  statement_id  = "${var.project_name}-AllowCloudFrontOACDist"
+  action        = "lambda:InvokeFunctionUrl"
+  function_name = aws_lambda_function.dr[0].function_name
+  principal     = "cloudfront.amazonaws.com"
+  source_arn    = aws_cloudfront_distribution.main.arn
 }
 
 # Lambda InvokeFunction permissions (required for OAC signing)
@@ -362,11 +362,11 @@ resource "aws_lambda_permission" "allow_cloudfront_primary_invoke" {
 resource "aws_lambda_permission" "allow_cloudfront_primary_invoke_dist" {
   provider = aws.primary
 
-  statement_id   = "${var.project_name}-AllowCloudFrontOACInvokeDist"
-  action         = "lambda:InvokeFunction"
-  function_name  = aws_lambda_function.primary.function_name
-  principal      = "cloudfront.amazonaws.com"
-  source_arn     = aws_cloudfront_distribution.main.arn
+  statement_id  = "${var.project_name}-AllowCloudFrontOACInvokeDist"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.primary.function_name
+  principal     = "cloudfront.amazonaws.com"
+  source_arn    = aws_cloudfront_distribution.main.arn
 }
 
 resource "aws_lambda_permission" "allow_cloudfront_dr_invoke" {
@@ -384,9 +384,9 @@ resource "aws_lambda_permission" "allow_cloudfront_dr_invoke_dist" {
   count    = var.enable_dr ? 1 : 0
   provider = aws.dr
 
-  statement_id   = "${var.project_name}-AllowCloudFrontOACInvokeDist"
-  action         = "lambda:InvokeFunction"
-  function_name  = aws_lambda_function.dr[0].function_name
-  principal      = "cloudfront.amazonaws.com"
-  source_arn     = aws_cloudfront_distribution.main.arn
+  statement_id  = "${var.project_name}-AllowCloudFrontOACInvokeDist"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.dr[0].function_name
+  principal     = "cloudfront.amazonaws.com"
+  source_arn    = aws_cloudfront_distribution.main.arn
 }

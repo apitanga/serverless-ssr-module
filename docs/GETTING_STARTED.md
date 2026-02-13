@@ -45,7 +45,7 @@ provider "aws" {
 
 # Deploy the module
 module "ssr" {
-  source = "github.com/pomo-studio/serverless-ssr-module"
+  source = "github.com/pomo-studio/terraform-aws-serverless-ssr"
 
   providers = {
     aws.primary = aws.primary
